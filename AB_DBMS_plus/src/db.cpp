@@ -63,30 +63,19 @@ RC Database::open_all_tables()
 {
     string filePath = dbpath_+"/"+dbname_;
     vector<string> files;
-    // string  distAll = "AllFiles.txt";
-
-    //读取所有的文件，包括子文件的文件
-    //GetAllFiles(filePath, files);
-
     //读取所有格式为.table的文件
     string format = ".table";
     GetAllFormatFiles(filePath, files, format);
-    // ofstream ofn(distAll);
     int size = files.size();
-    // ofn<<size<<endl;
     for (int i = 0; i < size; i++)
     {
-        
         //cout << ".table  " << files[i] << endl;
         // 读取到table中，然后加入opened_table_
         Table* table = new Table();
         table->open(files[i].c_str());
         opened_tables_[table->name()] = table;
-        
     }
-
-
-    return RC();
+    return RC::SUCCESS;
 }
 
 void Database::print_all_opened_tables()

@@ -31,13 +31,10 @@ public:
 
 	void TEST_READ_BUFFER_DATA(const char* dbname, const char* table_name);
 
-
 private:
 	DiskBufferPool* data_buffer_pool_;
 	TableMeta table_meta_;
 	RecordHandler* record_handler_;
-
-
 };
 
 #endif

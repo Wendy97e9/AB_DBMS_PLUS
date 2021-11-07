@@ -56,7 +56,7 @@ RC Table::insert_record(int value_num, const Value* values)
 	char* record_data;
 	make_record(value_num, values, record_data);
 	RID rid;
-	cout << "TABLE NAME " << name() << endl;
+	//cout << "TABLE NAME " << name() << endl;
 	record_handler_->insert_record("db", name(), record_data, table_meta_.record_size(), rid);
 	cout << "INSERT RID : PAGE : " << rid.page_num << " SLOT : " << rid.slot_num << endl;
 	return RC::SUCCESS;
@@ -64,7 +64,7 @@ RC Table::insert_record(int value_num, const Value* values)
 
 RC Table::make_record(int value_num, const Value* values, char*& record_out)
 {
-	cout << "*********************** MAKE RECORD *************************" << endl;
+	//cout << "*********************** MAKE RECORD *************************" << endl;
 	//检查字段类型是否一致，经过上一次函数，必须一致了
 
 	//转为char*，再转为真正的类型
@@ -99,7 +99,7 @@ RC Table::analyze_record(char* record)
 	{
 		int type = attributes[i]->type;
 		int len = attributes[i]->length;
-		cout << "\ts属性名" << "\t类型" << "\t长度" << "\t值" << endl;
+		cout << "\t属性名" << "\t类型" << "\t长度" << "\t值" << endl;
 		cout << "\t" << attributes[i]->name << "\t" << type << "\t" << len << "\t";
 		switch (type)
 		{

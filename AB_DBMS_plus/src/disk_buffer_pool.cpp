@@ -204,7 +204,6 @@ RC DiskBufferPool::get_this_page(const char* file_name, const char* table_name, 
 		cout << "*************** LRU ***************" << endl;
 		bp_manager_.print_all_frame();
 		frame_num = bp_manager_.doLRU();
-		
 		//flush
 		if (bp_manager_.frame[frame_num].dirty == true)
 		{
@@ -225,15 +224,11 @@ RC DiskBufferPool::get_this_page(const char* file_name, const char* table_name, 
 	datafile.read((char*)tmppage, sizeof(Page));
 	//让bp_manager_.frame[i].page
 	bp_manager_.frame[frame_num].page = *tmppage;
-	//cout << "BPMANAGER PAGE NUM " << bp_manager_.frame[frame_num].page.page_num << endl;
 	bp_manager_.frame[frame_num].acc_time = GetCurTime();
 	int len = strlen(table_name);
 	char* chartable_name = new char[len];
 	strcpy(chartable_name, table_name);
 	bp_manager_.frame[frame_num].relation_name = chartable_name;
-	//cout << "bp_manager_.frame[i].relation_name " << bp_manager_.frame[frame_num].relation_name << endl;
-	
-
 	//判断是不是满的page，保存在frame中
 	matchfile.seekg((page_num) * sizeof(DMATCH), ios::beg);
 	DMATCH* data_match = new DMATCH;
@@ -278,7 +273,7 @@ RC DiskBufferPool::allocate_page(const char* file_name, const char* table_name, 
 	}
 	matchfile.close();
 	
-	read_DMATCH(file_name);
+	//read_DMATCH(file_name);
 	return RC::SUCCESS;
 }
 

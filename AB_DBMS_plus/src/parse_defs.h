@@ -106,7 +106,7 @@ typedef struct {
 //    AttrInfo attributes[MAX_NUM];  // attributes
 //} CreateTable;
 
-// struct of craete_table
+// struct of create_table
 typedef struct {
     char relation_name[20];           // Relation name
     size_t attribute_count;        // Length of attribute
