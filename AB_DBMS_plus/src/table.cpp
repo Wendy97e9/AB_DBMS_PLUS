@@ -56,6 +56,7 @@ RC Table::insert_record(int value_num, const Value* values)
 	char* record_data;
 	make_record(value_num, values, record_data);
 	RID rid;
+	cout << "TABLE NAME " << name() << endl;
 	record_handler_->insert_record("db", name(), record_data, table_meta_.record_size(), rid);
 	cout << "INSERT RID : PAGE : " << rid.page_num << " SLOT : " << rid.slot_num << endl;
 	return RC::SUCCESS;
@@ -98,7 +99,8 @@ RC Table::analyze_record(char* record)
 	{
 		int type = attributes[i]->type;
 		int len = attributes[i]->length;
-		cout << attributes[i]->name << " " << type << " " << len << " ";
+		cout << "\ts属性名" << "\t类型" << "\t长度" << "\t值" << endl;
+		cout << "\t" << attributes[i]->name << "\t" << type << "\t" << len << "\t";
 		switch (type)
 		{
 		case 0:
@@ -145,15 +147,16 @@ void Table::TEST_READ_BUFFER_DATA(const char* dbname, const char* table_name)
 {
 	vector<int> frame_num;
 	data_buffer_pool_->get_this_page_by_name(dbname, table_name, frame_num);
-	cout << table_name << "对应的FRAME数量是" << frame_num.size() << endl;
+	cout << "\t" << table_name << "对应的FRAME数量是" << frame_num.size() << endl;
 	
 	for (int i = 0; i < frame_num.size(); i++)
 	{
 		unordered_map<int, char*> slot_num;
 		data_buffer_pool_->find_all_row(table_name, frame_num[i], table_meta_.record_size(), slot_num);
+		cout<<"    ------------- FRAME " << frame_num[i] << " ------------" << endl;
 		for (auto& it : slot_num)
 		{
-			cout << "---------------------------------------------------" << endl;
+			cout << "    ------------- SLOT " << it.first << " -------------" << endl;
 			analyze_record(it.second);
 			cout << "---------------------------------------------------" << endl;
 		}

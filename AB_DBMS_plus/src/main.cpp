@@ -31,10 +31,19 @@ void test()
 	
 }
 
+void create_data()
+{
+
+}
 void func_test()
 {
 	DiskBufferPool* bp = theGlobalDiskBufferPool();
+	bp->create_file("db");
 	DefaultHandler* dh = new DefaultHandler();
+	//for (int i = 0; i < 200; i++)
+	//{
+	//	dh->insert_record();
+	//}
 	int op = -1;
 	while (op != 0)
 	{
@@ -44,6 +53,8 @@ void func_test()
 		cout << "* 2	INSERT RECORD" << endl;
 		cout << "* 3	READ BUFFER DATA" << endl;
 		cout << "* 4	FLUSH ALL PAGES" << endl;
+		cout << "* 5	TEST LRU" << endl;
+		cout << "* 6	READ DMATCH FILE" << endl;
 		cout << "* 0	EXIT" << endl;
 		cout << "*********************************" << endl;
 		cin >> op;
@@ -63,6 +74,12 @@ void func_test()
 		case 4:
 			bp->flush_pages("db");
 			break;
+		case 5:
+			//测试LRU
+			break;
+		case 6:
+			bp->read_DMATCH("db");
+			
 		}
 	}
 	delete dh;
@@ -91,8 +108,8 @@ int main()
 	//dh->insert_record();
 	//dh->insert_record();	
 	//dh->insert_record();
-	////dh->insert_record();
-	////dh->insert_record();
+	//dh->insert_record();
+	//dh->insert_record();
 
 	////测试数据字典部分
 	////dh->create_table();

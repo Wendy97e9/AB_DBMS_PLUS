@@ -175,39 +175,74 @@ RC DiskBufferPool::open_file(const char* file_name, int* file_id)
 }
 
 //通过pagenum找frame_Num
+//把磁盘的page加载到缓存frame中，修改allocated
 RC DiskBufferPool::get_this_page(const char* file_name, const char* table_name, PageNum page_num, int& frame_num)
 {
 	string dbdatafile = string(DEFAULT_DB_PATH) + "/" + string(DEFAULT_DB_NAME) + "/" + string(file_name) + string(TABLE_DATA_SUFFIX);
 	string dbmatchfile = string(DEFAULT_DB_PATH) + "/" + string(DEFAULT_DB_NAME) + "/" + string(file_name) + string(TABLE_DATAMATCH_SUFFIX);
 
 	fstream datafile;
+	fstream matchfile;
+
 	datafile.open(dbdatafile, ios::in | ios::binary);
+	matchfile.open(dbmatchfile, ios::in | ios::binary);
+
+	bool flag = false;
 	for (int i = 0; i < bp_manager_.size; i++)
 	{
 		if (bp_manager_.allocated[i] == false)
 		{
 			//relationname在调用的地方改
 			frame_num = i;
-			cout << "get_this_page frame_num : " << frame_num << endl;
-			bp_manager_.allocated[i] = true;
-			datafile.seekg((page_num) * BP_PAGE_SIZE, ios::beg);
-			Page* tmppage = new Page;
-			datafile.read((char*)tmppage, sizeof(Page));
-			//让bp_manager_.frame[i].page
-			bp_manager_.frame[i].page = *tmppage;
-			cout << "BPMANAGER PAGE NUM " << bp_manager_.frame[i].page.page_num << endl;
-			bp_manager_.frame[i].acc_time = GetCurTime();
-			int len = strlen(table_name);
-			char* chartable_name = new char[len];
-			strcpy(chartable_name, table_name);
-
-			bp_manager_.frame[i].relation_name = chartable_name;
-			cout << "bp_manager_.frame[i].relation_name" << bp_manager_.frame[i].relation_name << endl;
-			//delete[] chartable_name;
+			flag = true;//找到了，改了
 			break;
 		}
 	}
+	//frame全被分配了，用LRU置换
+	if (flag == false)
+	{
+		cout << "*************** LRU ***************" << endl;
+		bp_manager_.print_all_frame();
+		frame_num = bp_manager_.doLRU();
+		
+		//flush
+		if (bp_manager_.frame[frame_num].dirty == true)
+		{
+			cout << "*************** LRU FLUSH ***************" << endl;
+			flush_this_page(file_name, frame_num);
+		}
+		bp_manager_.frame[frame_num].dirty = false;
+		bp_manager_.frame[frame_num].acc_time = GetCurTime();
+		bp_manager_.frame[frame_num].relation_name = NULL;
+		bp_manager_.frame[frame_num].state = UNFULL;
+		bp_manager_.allocated[frame_num] = false;
+	}
+	cout << "加载PAGE " << page_num << " 到 FRAME " << frame_num << endl;
+	//cout << "get_this_page frame_num : " << frame_num << endl;
+	bp_manager_.allocated[frame_num] = true;
+	datafile.seekg((page_num)*BP_PAGE_SIZE, ios::beg);
+	Page* tmppage = new Page;
+	datafile.read((char*)tmppage, sizeof(Page));
+	//让bp_manager_.frame[i].page
+	bp_manager_.frame[frame_num].page = *tmppage;
+	//cout << "BPMANAGER PAGE NUM " << bp_manager_.frame[frame_num].page.page_num << endl;
+	bp_manager_.frame[frame_num].acc_time = GetCurTime();
+	int len = strlen(table_name);
+	char* chartable_name = new char[len];
+	strcpy(chartable_name, table_name);
+	bp_manager_.frame[frame_num].relation_name = chartable_name;
+	//cout << "bp_manager_.frame[i].relation_name " << bp_manager_.frame[frame_num].relation_name << endl;
+	
+
+	//判断是不是满的page，保存在frame中
+	matchfile.seekg((page_num) * sizeof(DMATCH), ios::beg);
+	DMATCH* data_match = new DMATCH;
+	matchfile.read((char*)data_match, sizeof(DMATCH));
+	bp_manager_.frame[frame_num].state = data_match->state;
+	delete data_match;
 	datafile.close();
+	matchfile.close();
+	bp_manager_.print_all_frame();
 	return RC();
 }
 
@@ -225,14 +260,14 @@ RC DiskBufferPool::allocate_page(const char* file_name, const char* table_name, 
 	{
 		data_match = new DMATCH;
 		matchfile.read((char*)data_match, sizeof(DMATCH));
-		cout << "matchfile read:" << data_match->page_num << " " << data_match->table_name << " " << data_match->state << endl;
+		cout << "读取匹配文件 " << data_match->page_num << " " << data_match->table_name << " " << data_match->state << endl;
 		//cout << strcmp(data_match->table_name, "NULL") << endl;
 		if (strcmp(data_match->table_name, "NULL") == 0)
 		{
 			// 读取对应data_match->page_num的那一Page到BPManager的Frame中，修改DMATCH文件，将Page状态改为分配给这个table
 
 			get_this_page(file_name, table_name, data_match->page_num, frame_num);
-			cout << "allocate_page frame_num" << frame_num << endl;
+			//cout << "分配 FRAME " << frame_num << endl;
 			strcpy(data_match->table_name, table_name);
 			matchfile.seekp(sizeof(DMATCH) * (data_match->page_num), ios::beg);
 			matchfile.write((char*)data_match, sizeof(DMATCH));
@@ -242,6 +277,7 @@ RC DiskBufferPool::allocate_page(const char* file_name, const char* table_name, 
 		delete data_match;
 	}
 	matchfile.close();
+	
 	read_DMATCH(file_name);
 	return RC::SUCCESS;
 }
@@ -258,7 +294,7 @@ RC DiskBufferPool::read_DMATCH(const char* file_name)
 	{
 		data_match = new DMATCH;
 		matchfile.read((char*)data_match, sizeof(DMATCH));
-		cout << "matchfile read:(after update) " << data_match->page_num << " " << data_match->table_name << " " << data_match->state << endl;
+		cout << "matchfile read: " << data_match->page_num << " " << data_match->table_name << " " << data_match->state << endl;
 		delete data_match;
 	}
 	matchfile.close();
@@ -320,15 +356,19 @@ RC DiskBufferPool::read_DMATCH(const char* file_name)
 //	return RC();
 //}
 
+//访问了frame
 RC DiskBufferPool::get_this_page_by_name(const char* file_name, const char* relation_name, vector<int>& vec_frame_num)
 {
-	for (int i = 0; i < bp_manager_.size && bp_manager_.allocated[i]; i++)
+
+	cout << "\t关系名" << "\t页号(page_num)" << endl;
+	for (int i = 0; i < bp_manager_.size; i++)
 	{
-		
+		if (bp_manager_.allocated[i] == false)
+			continue;
 		if (strcmp(bp_manager_.frame[i].relation_name, relation_name)==0)
 		{
 			vec_frame_num.push_back(i);
-			cout << "get_this_page_by_name " << bp_manager_.frame[i].page.page_num << endl;
+			cout << "\t" << relation_name << "\t" << bp_manager_.frame[i].page.page_num << endl;
 		}
 	}
 	return RC::SUCCESS;
@@ -338,17 +378,28 @@ RC DiskBufferPool::get_this_page_by_name(const char* file_name, const char* rela
 RC DiskBufferPool::get_free_page(const char* file_name, const char* table_name, int row_size, int& frame_num)
 {
 	cout << "********** get_free_page **********" << endl;
-	for (int i = 0; i < bp_manager_.size && bp_manager_.allocated[i]==true; i++)
+	for (int i = 0; i < bp_manager_.size; i++)
 	{
-		bool flag = bp_manager_.isFull(table_name, i, row_size);
-		cout << "compare " << bp_manager_.frame[i].relation_name << " " << table_name << " " << flag << endl;
-		if (flag == false)
+		if (bp_manager_.allocated[i] == false)
+			continue;
+		//cout << "compare " << bp_manager_.frame[i].relation_name << " " << table_name << endl;
+		int max = BP_PAGE_DATA_SIZE / (sizeof(int) + row_size);
+		if (bp_manager_.frame[i].page.numofslot < max)
+		{
+			bp_manager_.frame[i].state = UNFULL;
+		}
+		else {
+			bp_manager_.frame[i].state = FULL;  
+		}
+		if (bp_manager_.frame[i].state==UNFULL&& strncmp(table_name, bp_manager_.frame[i].relation_name, 20) == 0)
 		{
 			frame_num = i;
-			cout << "当前缓冲区的空闲Page是：(pid)  " << bp_manager_.frame[frame_num].page.page_num << endl;
+			cout << "当前缓冲区的空闲Page是：(pid)  " << bp_manager_.frame[i].page.page_num << endl;
+			return RC::SUCCESS;
 		}
 	}
-	return RC::SUCCESS;
+	frame_num = -1;
+	return RC::GENERIC_ERROR;
 }
 
 //从DMATCH找
@@ -365,40 +416,66 @@ RC DiskBufferPool::find_all_page(const char* file_name, const char* relation_nam
 		matchfile.read((char*)data_match, sizeof(DMATCH));
 		if (strcmp(relation_name, data_match->table_name) == 0)
 		{
-			cout << "find_all_page  read: " << data_match->page_num << data_match->table_name << data_match->state << endl;
+			//cout << "find_all_page  read: " << data_match->page_num << data_match->table_name << data_match->state << endl;
 			vec_data_match.push_back(data_match);
 		}
 		
 		//delete data_match;	//能删吗？？？当然不能了！！！
 	}
-	cout << "find_all_page : " << vec_data_match.size() << endl;
+	//cout << "find_all_page : " << vec_data_match.size() << endl;
 	matchfile.close();
 	return RC::SUCCESS;
 }
 
+//！！！！！改，如果FULL，往DMATCH修改
+//!!!!!!!allocated改！！！
 RC DiskBufferPool::flush_this_page(const char* file_name, int frame_num)
 {
+	if (bp_manager_.allocated[frame_num] == false)
+	{
+		cout << "ERROR! 试图FLUSH未分配的FRAME " << endl;
+		return RC::GENERIC_ERROR;
+	}
 	cout << "********** flush_this_page **********" << endl;
 	string dbdatafile = string(DEFAULT_DB_PATH) + "/" + string(DEFAULT_DB_NAME) + "/" + string(file_name) + string(TABLE_DATA_SUFFIX);
 	int page_num = bp_manager_.frame[frame_num].page.page_num;
 	fstream datafile;
+	
 	// ios::in不加这个，导致文件覆写，并不是在指定位置修改
 	datafile.open(dbdatafile,ios::in | ios::out | ios::binary);
-	//matchfile.seekp(sizeof(DMATCH) * (data_match->page_num), ios::beg);
-	//matchfile.write((char*)data_match, sizeof(DMATCH));
 	datafile.seekp(sizeof(Page) * page_num, ios::beg);
-	cout << "page_num * sizeof(Page)" << page_num * sizeof(Page) << endl;
+	//cout << "page_num * sizeof(Page)" << page_num * sizeof(Page) << endl;
 	datafile.write((char*)&bp_manager_.frame[frame_num].page, sizeof(Page));
 	datafile.close();
+
+	string dbmatchfile = string(DEFAULT_DB_PATH) + "/" + string(DEFAULT_DB_NAME) + "/" + string(file_name) + string(TABLE_DATAMATCH_SUFFIX);
+	fstream matchfile;
+	matchfile.open(dbmatchfile, ios::in | ios::out | ios::binary);
+	
+	//这里的会有问题，因为frame的relationName好像改成NULL了
+	DMATCH* data_match = new DMATCH;
+	data_match->page_num = bp_manager_.frame[frame_num].page.page_num;
+	data_match->state = bp_manager_.frame[frame_num].state;
+	strcpy(data_match->table_name, bp_manager_.frame[frame_num].relation_name);
+	//cout << "DMATCH : TABLE NAME  " << data_match->table_name << endl;
+	matchfile.seekp(page_num * sizeof(DMATCH), ios::beg);
+	matchfile.write((char*)data_match, sizeof(DMATCH));
+
+	//恢复frame状态
+	strcpy(bp_manager_.frame[frame_num].relation_name, "NULL");
+	bp_manager_.frame[frame_num].dirty = false;
+	bp_manager_.frame[frame_num].state = UNFULL;
+	bp_manager_.allocated[frame_num] = false;
 	return RC::SUCCESS;
 }
 
 RC DiskBufferPool::flush_pages(const char* file_name)
 {
 	
-	for (int i = 0; i < bp_manager_.size&& bp_manager_.allocated[i]==true; i++)
+	for (int i = 0; i < bp_manager_.size; i++)
 	{
-		
+		if (bp_manager_.allocated[i] == false)
+			continue;
 		flush_this_page(file_name, i);
 	}
 	return RC::SUCCESS;
@@ -413,13 +490,12 @@ RC DiskBufferPool::find_all_row(const char* table_name, int frame_num, int row_s
 RC DiskBufferPool::insert_row(const char* file_name, const char* table_name, int frame_num, char* data, int row_size, int& page_num, int& slot_num)
 {
 	bp_manager_.insert_row(file_name, table_name, frame_num, data, row_size, page_num, slot_num);
-	//unordered_map<int, char*> slot_row;
-	//bp_manager_.find_all_row(table_name, frame_num, row_size, slot_row);
-	//for (auto& it : slot_row)
-	//{
-	//	cout << "当前Page的情况" << bp_manager_.frame[frame_num].page.page_num << " " << it.first << " " << it.second << endl;
-	//}
+	//cout << "DiskBufferPool BPMANAGER FRAME " << frame_num << " " <<page_num<< bp_manager_.frame[frame_num].dirty << endl;
 	return RC::SUCCESS;
+}
+
+void DiskBufferPool::TEST_LRU()
+{
 }
 
 BPManager DiskBufferPool::get_BPManager()
@@ -429,12 +505,21 @@ BPManager DiskBufferPool::get_BPManager()
 
 RC BPManager::insert_row(const char* file_name, const char* table_name, int frame_num, char* data, int row_size, int& page_num, int& slot_num)
 {
+	if (allocated[frame_num] == false)
+	{
+		cout << "ERROR! 试图插入未分配的FRAME" << endl;
+		return RC::GENERIC_ERROR;
+	}
 	//从以上情况中得到的frame_num的页面找空闲位置
 	int max = BP_PAGE_DATA_SIZE / (sizeof(int) + row_size);
-	//cout << "最多放 " << max << endl;
+	cout << "最多放 " << max << endl;
 	int offset = 0;
 	//找没有放满的Page
-	if (frame[frame_num].page.numofslot < max)
+	if (frame[frame_num].state == FULL)
+	{
+		cout << "STATE显示：已经满了" << endl;
+	}
+	if (frame[frame_num].state == UNFULL)
 	{
 		if (frame[frame_num].page.numofslot == frame[frame_num].page.maxofslot + 1)
 		{
@@ -454,18 +539,35 @@ RC BPManager::insert_row(const char* file_name, const char* table_name, int fram
 			}
 		}
 	}
+	else
+	{
+		cout << "已经满了" << endl;
+		return RC::GENERIC_ERROR;
+	}
 	memcpy(frame[frame_num].page.data + offset * (sizeof(int) + row_size), (void *)&row_size, sizeof(int));
 
 	memcpy(frame[frame_num].page.data + offset * (sizeof(int) + row_size) + sizeof(int), data, row_size);
 
 	frame[frame_num].dirty = true;
+	if (frame[frame_num].page.numofslot >= max)
+	{
+		frame[frame_num].state = FULL;
+	}
+	//isFull(table_name, frame_num, row_size);	//修改frame.state
+	frame[frame_num].acc_time = GetCurTime();
 	page_num = frame[frame_num].page.page_num;
 	slot_num = offset;
 	return RC::SUCCESS;
 }
 
+//访问，修改acctime
 RC BPManager::find_all_row(const char* table_name, int frame_num, int row_size, unordered_map<int, char*>& slot_row)
 {
+	if (allocated[frame_num] == false)
+	{
+		cout << "ERROR!从未分配的FRAME中查找" << endl;
+		return RC::GENERIC_ERROR;
+	}
 	if (strncmp(table_name, frame[frame_num].relation_name, 20))
 	{
 		cout << "ERROR USE FIND ALL ROW! NOT MATCH TABLENAME!" << endl;
@@ -480,7 +582,7 @@ RC BPManager::find_all_row(const char* table_name, int frame_num, int row_size, 
 	{
 		length = new int;
 		memcpy((char*)length, data + i * size, sizeof(int));
-		cout << "slot : " << i << " 状态：" << *length << endl;
+		cout << "\tslot : " << i << "\t状态：" << *length << endl;
 		if (*length != -1 && *length == row_size)
 		{
 			row = new char[row_size];
@@ -489,7 +591,7 @@ RC BPManager::find_all_row(const char* table_name, int frame_num, int row_size, 
 		}
 		
 	}
-
+	frame[frame_num].acc_time = GetCurTime();
 	
 	return RC::SUCCESS;
 }

@@ -13,7 +13,7 @@ RC RecordHandler::insert_record(const char* file_name, const char* table_name, c
     //3 找到一个位置，插入record
     //
     //
-    int frame_num=-1;
+    int frame_num = -1;
     //找缓冲区的Page，有没有对应于这个表的Frame
     //vector<int> vec_frame_num;
     //data_buffer_pool_->get_this_page_by_name(file_name, table_name, vec_frame_num);
@@ -23,13 +23,15 @@ RC RecordHandler::insert_record(const char* file_name, const char* table_name, c
     {
         cout << "缓冲区中有空闲Page " << endl;
         data_buffer_pool_->insert_row(file_name, table_name, frame_num, record, record_size, rid.page_num, rid.slot_num);
+        
         //cout << "RID " << rid.page_num << " " << rid.slot_num << endl;
         return RC::SUCCESS;
     }
 
 
 
-    //找DMATCH，看有没有这个表对应的页，并且为空
+    //找DMATCH，看有没有这个表对应的页，并且为空,
+    //!!!!!!并且此时不在缓冲区中，否则会发生错误，都以为是空闲页，都往里写了数据
     //找table_name=?的所有pid，看state，找0、1
     vector<DMATCH*> vec_data_match;
     data_buffer_pool_->find_all_page(file_name, table_name, vec_data_match);
@@ -37,6 +39,12 @@ RC RecordHandler::insert_record(const char* file_name, const char* table_name, c
     {
         if (vec_data_match[i]->state == UNFULL)
         {
+            //要判断frame情况，是不是全部都已经分配了
+            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!判断在不在缓冲区
+            if (data_buffer_pool_->inBuffer(vec_data_match[i]->page_num))
+            {
+                continue;
+            }
             data_buffer_pool_->get_this_page(file_name, table_name, vec_data_match[i]->page_num, frame_num);
             break;
         }

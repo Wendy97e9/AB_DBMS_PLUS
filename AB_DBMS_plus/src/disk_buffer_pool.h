@@ -27,12 +27,13 @@ using namespace std;
 typedef int PageNum;	//PID
 
 #define BP_INVALID_PAGE_NUM (-1)	//无效页 -1
-#define BP_PAGE_SIZE (1 << 12)		// 4096
+//#define BP_PAGE_SIZE (1 << 12)		// 4096
+#define BP_PAGE_SIZE (1 << 7)		// 128
 #define BP_BUFFER_SIZE 5			//缓冲池大小
 #define BP_PAGE_DATA_SIZE (BP_PAGE_SIZE - sizeof(PageNum) - 2*sizeof(int))
 #define MAX_OPEN_FILE 1024
 
-
+//vector<int> LRUCache;
 
 typedef struct {
     PageNum page_num;
@@ -53,6 +54,7 @@ typedef struct {
     unsigned long acc_time;
     char* relation_name;
     //int file_desc;
+    STATE state;
     Page page;
 } Frame;
 
@@ -98,19 +100,72 @@ public:
 
     RC find_all_row(const char* table_name, int frame_num, int row_size, unordered_map<int, char*>& slot_row);
 
-    bool isFull(const char* table_name, int frame_num, int row_size)
+    //bool isFull(const char* table_name, int frame_num, int row_size)
+    //{
+    //    if (strncmp(table_name , frame[frame_num].relation_name,20))
+    //    {
+    //        cout << "NOT MATCH TABLENAME!" << endl;
+    //        return true;    //  返回true，不让他插入
+    //    }
+    //    int max = BP_PAGE_DATA_SIZE / (sizeof(int) + row_size);
+    //    if (frame[frame_num].page.numofslot < max)
+    //    {
+    //        cout << "已分配槽的数目：" << frame[frame_num].page.numofslot << endl;
+    //        frame[frame_num].state = UNFULL;
+    //        return false;
+    //    }
+    //    frame[frame_num].state = FULL;  //改失败了
+    //    return true;
+    //}
+
+    //判断pid是不是已经载入了缓冲区
+    bool inBuffer(PageNum page_num)
     {
-        if (strncmp(table_name , frame[frame_num].relation_name,20))
+        for (int i = 0; i < size; i++)
         {
-            cout << "ERROR USE ISFULL! NOT MATCH TABLENAME!" << endl;
-            return true;    //  返回true，不让他插入
+            if (allocated[i] == false)
+                continue;
+            if (frame[i].page.page_num == page_num)
+            {
+                return true;    //已经在缓冲区里了
+            }
         }
-        int max = BP_PAGE_DATA_SIZE / (sizeof(int) + row_size);
-        if (frame[frame_num].page.numofslot < max)
+        return false;
+    }
+
+    //前提：buffer已满
+    //返回，要淘汰的frame_num
+    int doLRU()
+    {
+        int min = frame[0].acc_time;
+        int free_frame_num = 0;
+        for (int i = 0; i < size; i++)
         {
-            return false;
+            if (allocated[i] == false)
+            {
+                cout << "ERROR BUFFER NOT FULL" << endl;
+                return -1;
+            }
+            if (frame[i].acc_time < min)
+            {
+                min = frame[i].acc_time;
+                free_frame_num = i;
+            }
         }
-        return true;
+        cout << "即将淘汰 FRAME " << free_frame_num << endl;
+        return free_frame_num;
+    }
+
+    void print_all_frame()
+    {
+        cout << "***************** PRINT ALL FRAME *****************" << endl;
+        for (int i = 0; i < size; i++)
+        {
+            if (allocated[i] == false)
+                continue;
+            cout << "FRAME " << i << "\t" << frame[i].page.page_num << "\t" << frame[i].acc_time << endl;
+            
+        }
     }
 
 public:
@@ -166,11 +221,17 @@ public:
     //根据frame_num的值，找到所有的row
     RC find_all_row(const char* table_name, int frame_num, int row_size, unordered_map<int, char*>& slot_row);
    
+    //判断是否一个page已经在buffer中
+    bool inBuffer(PageNum page_num)
+    {
+        return bp_manager_.inBuffer(page_num);
+    }
 
     //table_name frame_num record record_size slot_num
     //
     RC insert_row(const char* file_name, const char* table_name, int frame_num, char* data, int row_size, int& page_num, int& slot_num);
 
+    void TEST_LRU();
 private:
     BPManager get_BPManager();
     
@@ -181,7 +242,41 @@ private:
 
 DiskBufferPool* theGlobalDiskBufferPool();
 
-
+//满了，frame_num>=BP_BUFFER_SIZE，说明需要置换Page，返回要置换的
+//int SortFrame(int frame_num)
+//{
+//    if (LRUCache.size() < BP_BUFFER_SIZE)
+//    {
+//        LRUCache.push_back(frame_num);
+//    }
+//    else
+//    {
+//        bool flag = false;
+//        vector<int>::iterator iter = LRUCache.begin();
+//        for (iter=LRUCache.begin(); iter!=LRUCache.end(); iter++)
+//        {
+//            if (*iter == frame_num)
+//            {
+//                flag = true;
+//                break;
+//            }
+//        }
+//        if (flag)
+//        {
+//            LRUCache.erase(iter);
+//            LRUCache.push_back(frame_num);
+//        }
+//        else
+//        {
+//            int tmp = LRUCache.front();
+//            LRUCache.erase(LRUCache.begin());
+//            LRUCache.push_back(tmp);
+//            return tmp;
+//        }
+//    }
+//    return BP_BUFFER_SIZE;
+//
+//}
 
 
 #endif // !_DISK_BUFFER_POOL_

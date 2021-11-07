@@ -17,6 +17,8 @@ public:
 
 	//测试读取当前缓冲区的对应table_name的所有的Page
 	void TEST_READ_BUFFER_DATA();
+
+	void TEST_LRU();
 	
 	RC insert_record();
 	RC delete_record();

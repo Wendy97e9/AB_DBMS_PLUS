@@ -34,26 +34,26 @@ RC DefaultHandler::create_table()
 	}
 	// 接下来是建立一个默认的表
 	//////////////////////////////////////////////////////////////
-	//// id name
-	//ct->attribute_count = 2;
-	//strcpy(ct->attributes[0].name, "id");
-	//ct->attributes[0].type = INTS;
-	//ct->attributes[0].length = 4;
-	//strcpy(ct->attributes[1].name, "name");
-	//ct->attributes[1].type = CHARS;
-	//ct->attributes[1].length = 10;
-	//////////////////////////////////////////////////////////////
-	// name sex age
-	ct->attribute_count = 3;
-	strcpy(ct->attributes[0].name, "name");
-	ct->attributes[0].type = CHARS;
-	ct->attributes[0].length = 10;
-	strcpy(ct->attributes[1].name, "sex");
+	// id name
+	ct->attribute_count = 2;
+	strcpy(ct->attributes[0].name, "id");
+	ct->attributes[0].type = INTS;
+	ct->attributes[0].length = 4;
+	strcpy(ct->attributes[1].name, "name");
 	ct->attributes[1].type = CHARS;
-	ct->attributes[1].length = 3;
-	strcpy(ct->attributes[2].name, "age");
-	ct->attributes[2].type = INTS;
-	ct->attributes[2].length = 4;
+	ct->attributes[1].length = 10;
+	//////////////////////////////////////////////////////////////
+	//// name sex age
+	//ct->attribute_count = 3;
+	//strcpy(ct->attributes[0].name, "name");
+	//ct->attributes[0].type = CHARS;
+	//ct->attributes[0].length = 10;
+	//strcpy(ct->attributes[1].name, "sex");
+	//ct->attributes[1].type = CHARS;
+	//ct->attributes[1].length = 3;
+	//strcpy(ct->attributes[2].name, "age");
+	//ct->attributes[2].type = INTS;
+	//ct->attributes[2].length = 4;
 	////////////////////////////////////////////////////////////
 
 	
@@ -90,17 +90,17 @@ void DefaultHandler::TEST_READ_BUFFER_DATA()
 		table->TEST_READ_BUFFER_DATA("db", table_name);
 }
 
+void DefaultHandler::TEST_LRU()
+{
+	DiskBufferPool* bp = theGlobalDiskBufferPool();
+	bp->TEST_LRU();
+}
+
 RC DefaultHandler::insert_record()
 {
 	cout << "********** INSERT RECORD **********" << endl;
 	cout << "********** Relation Name **********" << endl;
-	//void* p;
-	//char s[10] = "abcd";//对
-	//char* s2 = new char[10];//错
-	//p = s;
-	//p = s2;
-	//cout << (char*)p << endl;
-	//delete s2;
+
 	db->print_all_opened_tables();
 
 	Inserts* inserts = new Inserts;
@@ -118,7 +118,7 @@ RC DefaultHandler::insert_record()
 	/////////////////////////////////////////////////////////////////////////
 	for (int i = 0; i < attributes.size(); i++)
 	{
-		cout << attributes[i]->name << " " << attributes[i]->type << " " << attributes[i]->length << endl;
+		cout << attributes[i]->name << "\t" << attributes[i]->type << "\t" << attributes[i]->length << endl;
 		inserts->values[i].type = attributes[i]->type;
 		int type = attributes[i]->type;
 		int len = attributes[i]->length;
