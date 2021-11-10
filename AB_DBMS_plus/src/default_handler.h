@@ -13,6 +13,9 @@ public:
 	DefaultHandler();
 
 	RC create_table();
+
+	//查找table？？中所有的元组
+	RC select_table();
 	Table* find_table(const char* dbname, const char* table_name) const;
 
 	//测试读取当前缓冲区的对应table_name的所有的Page

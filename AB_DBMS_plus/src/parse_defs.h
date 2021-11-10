@@ -96,7 +96,7 @@ typedef struct {
 //指针应该改了，存储不对，不能
 typedef struct {
     char* name;     //索引名
-    char* field;    //字段名
+    char* field;    //字段名，要根据这个去table_meta找长度和类型！！！tablemeta要有接口支持
 } IndexInfo;
 
 //// struct of craete_table

@@ -31,6 +31,7 @@
     <ClInclude Include="src\table.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\BPlusTree.cpp" />
     <ClCompile Include="src\db.cpp" />
     <ClCompile Include="src\default_handler.cpp" />
     <ClCompile Include="src\disk_buffer_pool.cpp" />

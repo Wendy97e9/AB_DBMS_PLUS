@@ -119,7 +119,8 @@ public:
     //}
 
     //判断pid是不是已经载入了缓冲区
-    bool inBuffer(PageNum page_num)
+    // 是，返回页框号，否，返回0
+    int inBuffer(PageNum page_num)
     {
         for (int i = 0; i < size; i++)
         {
@@ -127,10 +128,10 @@ public:
                 continue;
             if (frame[i].page.page_num == page_num)
             {
-                return true;    //已经在缓冲区里了
+                return i;    //已经在缓冲区里了
             }
         }
-        return false;
+        return -1;
     }
 
     //前提：buffer已满
@@ -222,7 +223,7 @@ public:
     RC find_all_row(const char* table_name, int frame_num, int row_size, unordered_map<int, char*>& slot_row);
    
     //判断是否一个page已经在buffer中
-    bool inBuffer(PageNum page_num)
+    int inBuffer(PageNum page_num)
     {
         return bp_manager_.inBuffer(page_num);
     }

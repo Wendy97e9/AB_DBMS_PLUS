@@ -26,6 +26,35 @@ RC Table::create(const char* table_path_name, CreateTable* ct)
 	return RC::SUCCESS;
 }
 
+RC Table::select_all(const char* file_name, const char* table_name)
+{
+	vector<DMATCH*> vec_data_match;
+	data_buffer_pool_->find_all_page(file_name, table_name, vec_data_match);
+	unordered_map<int, char*> slot_row;
+	for (int i = 0; i < vec_data_match.size(); i++)
+	{
+		slot_row.clear();
+		int frame_num = data_buffer_pool_->inBuffer(vec_data_match[i]->page_num);
+		//要判断frame情况，是不是全部都已经分配了
+		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!判断在不在缓冲区
+		if (frame_num == -1)	//不在Buffer
+		{
+			data_buffer_pool_->get_this_page("db", table_name, vec_data_match[i]->page_num, frame_num);
+		}
+		data_buffer_pool_->find_all_row(table_name, frame_num, table_meta_.record_size(), slot_row);
+		cout << "    ------------- FRAME " << frame_num << " ------------" << endl;
+		for (auto& it : slot_row)
+		{
+			cout << "    ------------- SLOT " << it.first << " -------------" << endl;
+			analyze_record(it.second);
+			cout << "---------------------------------------------------" << endl;
+		}
+		
+
+	}
+	return RC();
+}
+
 //这个参数已经加了.table后缀
 RC Table::open(const char* table_path_name)
 {

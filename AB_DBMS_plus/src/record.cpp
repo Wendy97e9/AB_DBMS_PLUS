@@ -41,7 +41,7 @@ RC RecordHandler::insert_record(const char* file_name, const char* table_name, c
         {
             //要判断frame情况，是不是全部都已经分配了
             //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!判断在不在缓冲区
-            if (data_buffer_pool_->inBuffer(vec_data_match[i]->page_num))
+            if (data_buffer_pool_->inBuffer(vec_data_match[i]->page_num) != -1) //在缓冲区，不做任何处理
             {
                 continue;
             }

@@ -202,7 +202,7 @@ RC DiskBufferPool::get_this_page(const char* file_name, const char* table_name, 
 	if (flag == false)
 	{
 		cout << "*************** LRU ***************" << endl;
-		bp_manager_.print_all_frame();
+		//bp_manager_.print_all_frame();
 		frame_num = bp_manager_.doLRU();
 		//flush
 		if (bp_manager_.frame[frame_num].dirty == true)
@@ -237,7 +237,7 @@ RC DiskBufferPool::get_this_page(const char* file_name, const char* table_name, 
 	delete data_match;
 	datafile.close();
 	matchfile.close();
-	bp_manager_.print_all_frame();
+	//bp_manager_.print_all_frame();
 	return RC();
 }
 
@@ -356,6 +356,7 @@ RC DiskBufferPool::get_this_page_by_name(const char* file_name, const char* rela
 {
 
 	cout << "\t¹ØÏµÃû" << "\tÒ³ºÅ(page_num)" << endl;
+
 	for (int i = 0; i < bp_manager_.size; i++)
 	{
 		if (bp_manager_.allocated[i] == false)

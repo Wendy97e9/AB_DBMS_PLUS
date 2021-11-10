@@ -53,8 +53,9 @@ void func_test()
 		cout << "* 2	INSERT RECORD" << endl;
 		cout << "* 3	READ BUFFER DATA" << endl;
 		cout << "* 4	FLUSH ALL PAGES" << endl;
-		cout << "* 5	TEST LRU" << endl;
+		cout << "* 5	SELECT TABLE *" << endl;
 		cout << "* 6	READ DMATCH FILE" << endl;
+		
 		cout << "* 0	EXIT" << endl;
 		cout << "*********************************" << endl;
 		cin >> op;
@@ -75,7 +76,9 @@ void func_test()
 			bp->flush_pages("db");
 			break;
 		case 5:
-			//测试LRU
+			//读取一个表的所有数据
+			dh->select_table();
+			
 			break;
 		case 6:
 			bp->read_DMATCH("db");

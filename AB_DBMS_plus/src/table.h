@@ -16,6 +16,8 @@ public:
 
 	RC create(const char* table_path_name, CreateTable* ct);
 
+	RC select_all(const char* file_name, const char* table_name);
+
 	RC open(const char* table_path_name);
 
 	RC insert_record(int value_num, const Value* values);

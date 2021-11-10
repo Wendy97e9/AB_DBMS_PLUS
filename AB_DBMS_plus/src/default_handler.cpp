@@ -66,6 +66,23 @@ RC DefaultHandler::create_table()
 	return RC::GENERIC_ERROR;
 }
 
+RC DefaultHandler::select_table()
+{
+	cout << "********** SELECT TABLE * **********" << endl;
+	cout << "********** RelationName **********" << endl;
+	char table_name[20];
+	cin >> table_name;
+	Table* table = find_table("db", table_name);
+	// 1 dmatch找到所有的块
+	// 2 in buffer?
+	// 3 no: load
+	// 4 print frame[frame_num]
+	// 5 
+	table->select_all("db", table_name);
+	//table->analyze_all_record
+	return RC();
+}
+
 Table* DefaultHandler::find_table(const char* dbname, const char* table_name) const {
 	if (dbname == nullptr || table_name == nullptr) {
 		
@@ -149,7 +166,20 @@ RC DefaultHandler::insert_record()
 	/////////////////////////////////////////////////////////////////////////
 	inserts->value_num = attributes.size();
 	table->insert_record(inserts->value_num, inserts->values);
-	
-	
 	return RC();
+}
+
+//const char* dbname, const char* relation_name, const char* index_name, const char* attribute_name
+RC DefaultHandler::create_index() {
+	cout << "********** INSERT INDEX **********" << endl;
+	cout << "********** Relation Name **********" << endl;
+
+	CreateIndex* ci = new CreateIndex;
+	Table* table = find_table("db", ci->relation_name);
+	if (nullptr == table) {
+		return RC::GENERIC_ERROR;
+	}
+	//table->create_index(index_name, attribute_name)
+	RC ret = GENERIC_ERROR;
+	return ret;
 }
