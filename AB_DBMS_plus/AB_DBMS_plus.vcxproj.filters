@@ -15,16 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\bplustree.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="src\db.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\default_handler.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\index.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\meta.h">
@@ -43,6 +37,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\disk_buffer_pool.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\bplustree_index.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -71,7 +68,7 @@
     <ClCompile Include="src\record.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\BPlusTree.cpp">
+    <ClCompile Include="src\bplustree_index.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -3,7 +3,7 @@
 using namespace std;
 
 #define MAX 50
-
+bool dataFound = false;
 
 //number of pointers or number of child blocks [numberOfPointers = numberOfNodes + 1]
 int numberOfPointers;
@@ -372,7 +372,8 @@ void mergeBlock(Block *leftBlock, Block *rightBlock, bool isLeaf, int posOfRight
 
 
 }
-bool dataFound;
+
+
 void deleteNode(Block *curBlock, int val, int curBlockPosition){
 
      //to check if the current block is a leaf or not

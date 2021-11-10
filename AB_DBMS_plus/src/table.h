@@ -6,6 +6,7 @@
 #include "meta.h"
 #include "disk_buffer_pool.h"
 #include "record.h"
+#include "bplustree_index.h"
 
 class Table
 {
@@ -16,6 +17,10 @@ public:
 
 	RC create(const char* table_path_name, CreateTable* ct);
 
+	RC create_index(const char* file_name, const char* table_name, CreateIndex* ci);
+
+	RC select_all_rid(const char* file_name, const char* table_name, char* attribute_name);
+
 	RC select_all(const char* file_name, const char* table_name);
 
 	RC open(const char* table_path_name);
@@ -23,6 +28,8 @@ public:
 	RC insert_record(int value_num, const Value* values);
 
 	RC make_record(int value_num, const Value* values, char*& record_out);
+
+	int find_key(char* attribute_name, char* record);
 
 	//根据table_meta的attributes，解析record
 	RC analyze_record(char* record);

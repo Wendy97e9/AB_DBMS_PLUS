@@ -1,6 +1,7 @@
 #include "disk_buffer_pool.h"
 #include "default_handler.h"
 #include "parse_defs.h"
+#include "bplustree_index.h"
 
 void test()
 {
@@ -31,9 +32,38 @@ void test()
 	
 }
 
-void create_data()
+void bplustree_test()
 {
-
+	BplusTreeIndex* bpt = new BplusTreeIndex();
+	vector < Block* > Blocks;
+	bpt->insertNode(bpt->rootBlock, INTS, 4, "4");
+	Blocks.clear();
+	Blocks.push_back(bpt->rootBlock);
+	bpt->print(Blocks);
+	bpt->insertNode(bpt->rootBlock, INTS, 4, "7");
+	Blocks.clear();
+	Blocks.push_back(bpt->rootBlock);
+	bpt->print(Blocks);
+	bpt->insertNode(bpt->rootBlock, INTS, 4, "2");
+	Blocks.clear();
+	Blocks.push_back(bpt->rootBlock);
+	bpt->print(Blocks);	
+	bpt->insertNode(bpt->rootBlock, INTS, 4, "5");
+	Blocks.clear();
+	Blocks.push_back(bpt->rootBlock);
+	bpt->print(Blocks);	
+	bpt->insertNode(bpt->rootBlock, INTS, 4, "6");
+	Blocks.clear();
+	Blocks.push_back(bpt->rootBlock);
+	bpt->print(Blocks);	
+	bpt->insertNode(bpt->rootBlock, INTS, 4, "3");
+	Blocks.clear();
+	Blocks.push_back(bpt->rootBlock);
+	bpt->print(Blocks);	
+	bpt->insertNode(bpt->rootBlock, INTS, 4, "1");
+	Blocks.clear();
+	Blocks.push_back(bpt->rootBlock);
+	bpt->print(Blocks);
 }
 void func_test()
 {
@@ -55,7 +85,7 @@ void func_test()
 		cout << "* 4	FLUSH ALL PAGES" << endl;
 		cout << "* 5	SELECT TABLE *" << endl;
 		cout << "* 6	READ DMATCH FILE" << endl;
-		
+		cout << "* 7	CREATE INTEX" << endl;
 		cout << "* 0	EXIT" << endl;
 		cout << "*********************************" << endl;
 		cin >> op;
@@ -82,6 +112,10 @@ void func_test()
 			break;
 		case 6:
 			bp->read_DMATCH("db");
+			break;
+		case 7:
+			dh->create_index();
+			break;
 			
 		}
 	}
@@ -92,6 +126,8 @@ void func_test()
 int main()
 {
 	//test();
+	cout << sizeof(Block) << endl;
+	//bplustree_test();
 	func_test();
 	//DiskBufferPool* bp = theGlobalDiskBufferPool();
 	////printf("---------data_buffer_pool_      %p", bp);

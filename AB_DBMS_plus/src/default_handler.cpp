@@ -175,11 +175,15 @@ RC DefaultHandler::create_index() {
 	cout << "********** Relation Name **********" << endl;
 
 	CreateIndex* ci = new CreateIndex;
+	strcpy(ci->relation_name , "T1");
+	strcpy(ci->index_name, "ixid");
+	strcpy(ci->attribute_name, "id");
 	Table* table = find_table("db", ci->relation_name);
 	if (nullptr == table) {
 		return RC::GENERIC_ERROR;
 	}
-	//table->create_index(index_name, attribute_name)
+	table->create_index("db", ci->relation_name, ci);
+
 	RC ret = GENERIC_ERROR;
 	return ret;
 }

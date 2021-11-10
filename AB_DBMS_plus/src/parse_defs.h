@@ -120,9 +120,9 @@ typedef struct {
 
 // struct of create_index
 typedef struct {
-    char* index_name;      // Index name
-    char* relation_name;   // Relation name
-    char* attribute_name;  // Attribute name
+    char index_name[20];      // Index name
+    char relation_name[20];   // Relation name
+    char attribute_name[20];  // Attribute name
 } CreateIndex;
 
 // struct of  drop_index

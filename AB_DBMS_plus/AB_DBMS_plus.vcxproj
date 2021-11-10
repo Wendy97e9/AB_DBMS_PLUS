@@ -19,11 +19,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\bplustree.h" />
     <ClInclude Include="src\db.h" />
     <ClInclude Include="src\default_handler.h" />
     <ClInclude Include="src\disk_buffer_pool.h" />
-    <ClInclude Include="src\index.h" />
+    <ClInclude Include="src\bplustree_index.h" />
     <ClInclude Include="src\meta.h" />
     <ClInclude Include="src\parse_defs.h" />
     <ClInclude Include="src\rc.h" />
@@ -31,7 +30,7 @@
     <ClInclude Include="src\table.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\BPlusTree.cpp" />
+    <ClCompile Include="src\bplustree_index.cpp" />
     <ClCompile Include="src\db.cpp" />
     <ClCompile Include="src\default_handler.cpp" />
     <ClCompile Include="src\disk_buffer_pool.cpp" />

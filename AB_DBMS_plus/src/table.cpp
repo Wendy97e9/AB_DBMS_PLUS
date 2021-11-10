@@ -26,6 +26,66 @@ RC Table::create(const char* table_path_name, CreateTable* ct)
 	return RC::SUCCESS;
 }
 
+RC Table::create_index(const char* file_name, const char* table_name, CreateIndex* ci)
+{
+	// 1 ci写文件
+	// 2 
+	BplusTreeIndex* bpt = new BplusTreeIndex();
+
+	select_all_rid(file_name, table_name, ci->attribute_name);
+	
+	return RC::SUCCESS;
+}
+
+//用于建立索引
+RC Table::select_all_rid(const char* file_name, const char* table_name, char* attribute_name)
+{
+	vector<DMATCH*> vec_data_match;
+	data_buffer_pool_->find_all_page(file_name, table_name, vec_data_match);
+	unordered_map<int, char*> slot_row;
+	unordered_map<int, RID*> key_rid;
+	RID* tmprid;
+	for (int i = 0; i < vec_data_match.size(); i++)
+	{
+		slot_row.clear();
+		int frame_num = data_buffer_pool_->inBuffer(vec_data_match[i]->page_num);
+		//要判断frame情况，是不是全部都已经分配了
+		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!判断在不在缓冲区
+		if (frame_num == -1)	//不在Buffer
+		{
+			data_buffer_pool_->get_this_page("db", table_name, vec_data_match[i]->page_num, frame_num);
+		}
+		data_buffer_pool_->find_all_row(table_name, frame_num, table_meta_.record_size(), slot_row);
+		cout << "    ------------- FRAME " << frame_num << " ------------" << endl;
+		for (auto& it : slot_row)
+		{
+			tmprid = new RID();
+			cout << "    ------------- SLOT " << it.first << " -------------" << endl;
+			tmprid->page_num = vec_data_match[i]->page_num;
+			tmprid->slot_num = it.first;
+			int key = find_key(attribute_name, it.second);
+			key_rid[key] = tmprid;
+			//analyze_record(it.second);
+			cout << "---------------------------------------------------" << endl;
+		}
+		
+
+	}
+	///////////////////////////////////////////////////////////////////////////
+	BplusTreeIndex* bpt = new BplusTreeIndex();
+	vector < Block* > Blocks;
+	for (auto& it : key_rid)
+	{
+		bpt->insertNode(bpt->rootBlock, INTS, 4, (char*)&it.first);
+		Blocks.clear();
+		Blocks.push_back(bpt->rootBlock);
+		bpt->print(Blocks);
+	}
+	return RC::SUCCESS;
+}
+
+
+
 RC Table::select_all(const char* file_name, const char* table_name)
 {
 	vector<DMATCH*> vec_data_match;
@@ -114,6 +174,37 @@ RC Table::make_record(int value_num, const Value* values, char*& record_out)
 	////////////////////////////////////////////////////////////
 	record_out = record;
 	return RC::SUCCESS;
+}
+
+//key int
+int Table::find_key(char* attribute_name, char* record)
+{
+	vector<AttrInfo*> attributes = table_meta_.get_attributes();
+	char* attr1;
+	int* attr2;
+	float* attr3;
+	for (int i = 0; i < attributes.size(); i++)
+	{
+		int type = attributes[i]->type;
+		int len = attributes[i]->length;
+		if (strcmp(attributes[i]->name, attribute_name) == 0)
+		{
+
+			cout << "find key!!!!!!!!!!!!!!!!!!!!!!!!!! " ;
+			attr2 = new int;
+			memcpy((char*)attr2, record, len);
+			cout << *attr2 << endl;
+			int ret = *attr2;
+			delete attr2;
+			return ret;
+		}
+
+		record += len;
+
+		//cout << attr << endl;
+
+	}
+	return RC::GENERIC_ERROR;
 }
 
 
