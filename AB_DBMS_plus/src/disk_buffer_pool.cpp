@@ -241,6 +241,21 @@ RC DiskBufferPool::get_this_page(const char* file_name, const char* table_name, 
 	return RC();
 }
 
+RC DiskBufferPool::get_this_row(const char* file_name, const char* table_name, PageNum page_num, int slot_num, int row_size, char*& row_out)
+{
+	int frame_num = inBuffer(page_num);
+	if (frame_num == -1)
+	{
+		get_this_page(file_name, table_name, page_num, frame_num);
+	}
+	
+//bp_ma
+
+	bp_manager_.get_this_row(table_name, frame_num, slot_num, row_size, row_out);
+
+	return RC();
+}
+
 //从数据文件分配新的一页到缓冲池
 RC DiskBufferPool::allocate_page(const char* file_name, const char* table_name, int& frame_num)
 {
@@ -590,4 +605,12 @@ RC BPManager::find_all_row(const char* table_name, int frame_num, int row_size, 
 	frame[frame_num].acc_time = GetCurTime();
 	
 	return RC::SUCCESS;
+}
+
+RC BPManager::get_this_row(const char* table_name, int frame_num, int slot_num, int row_size, char*& row_out)
+{
+	char* row = new char[row_size];
+	memcpy(row, frame[frame_num].page.data + slot_num * (sizeof(int) + row_size) + sizeof(int), row_size);
+	row_out = row;
+	return RC();
 }

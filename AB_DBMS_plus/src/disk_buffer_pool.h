@@ -100,6 +100,8 @@ public:
 
     RC find_all_row(const char* table_name, int frame_num, int row_size, unordered_map<int, char*>& slot_row);
 
+    RC get_this_row(const char* table_name, int frame_num, int slot_num, int row_size, char*& row_out);
+
     //bool isFull(const char* table_name, int frame_num, int row_size)
     //{
     //    if (strncmp(table_name , frame[frame_num].relation_name,20))
@@ -194,6 +196,8 @@ public:
      * @return
      */
     RC get_this_page(const char* file_name, const char * table_name, PageNum page_num, int& frame_num);
+
+    RC get_this_row(const char* file_name, const char* table_name, PageNum page_num, int slot_num, int row_size, char*& row_out);
 
     /**
      * 在指定文件中分配一个新的页面，并将其放入缓冲区，返回页面句柄指针。

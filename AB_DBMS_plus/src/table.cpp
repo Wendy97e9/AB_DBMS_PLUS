@@ -80,6 +80,10 @@ RC Table::select_all_rid(const char* file_name, const char* table_name, char* at
 		Blocks.clear();
 		Blocks.push_back(bpt->rootBlock);
 		bpt->print(Blocks);
+		//
+		char* row;
+		data_buffer_pool_->get_this_row(file_name, table_name, it.second->page_num, it.second->slot_num, table_meta_.record_size(),row);
+		analyze_record(row);
 	}
 	return RC::SUCCESS;
 }

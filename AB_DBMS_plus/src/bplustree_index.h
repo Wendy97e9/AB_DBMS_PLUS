@@ -33,6 +33,8 @@ struct Block {
 //只支持Int索引
 class BplusTreeIndex {
 public:
+    BplusTreeIndex();
+
     RC insertNode(Block* curBlock, AttrType type, int length, char* value);
     RC splitLeaf(Block* curBlock);
     RC splitNonLeaf(Block* curBlock);
@@ -44,6 +46,8 @@ public:
     RC print(vector < Block* > Blocks);
 
     Block* rootBlock = new Block();
+    void setNumberOfPointers(int numberOfPointers);
+private:
     int numberOfPointers = 5;   //=size/record_size
     bool dataFound = false;
 

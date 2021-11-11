@@ -1,6 +1,12 @@
 #include "bplustree_index.h"
 
 
+BplusTreeIndex::BplusTreeIndex()
+{
+    //数字不起作用
+    setNumberOfPointers(5);
+}
+
 RC BplusTreeIndex::insertNode(Block* curBlock, AttrType type, int length, char* value)
 {
     int* pval;
@@ -567,4 +573,10 @@ RC BplusTreeIndex::print(vector<Block*> Blocks)
         print(newBlocks);
     }
     return RC();
+}
+
+void BplusTreeIndex::setNumberOfPointers(int numberOfPointers)
+{
+    this->numberOfPointers = BP_PAGE_DATA_SIZE / 22;
+    cout << "NumberOfPointers = " << this->numberOfPointers << endl;
 }

@@ -40,6 +40,8 @@ public:
     RecordHandler();
     RC insert_record(const char* file_name, const char* table_name, char* record,int record_size,RID &rid);
 
+    
+
 
 private:
     DiskBufferPool* data_buffer_pool_;
